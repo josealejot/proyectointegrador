@@ -1,8 +1,9 @@
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { CheckCircle2, Pencil, Plus, PlusCircle, Search, Trash2, XCircle } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { mensajeError } from '../api/http.js'
 import * as api from '../api/recursos.js'
 import FormularioModal from '../components/FormularioModal.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 import { filtrarFilas, formatoFecha, formatoHora, formatoMoneda } from '../utils/formato.js'
 
 // Muestra el valor de una celda segun el formato de la columna
@@ -29,6 +30,7 @@ function Celda({ columna, fila }) {
 // Pagina generica de un modulo: tabla, buscador, filtros y formulario.
 // Sirve para citas, clientes, barberos, servicios y usuarios.
 export default function ModuloCrud({ modulo }) {
+  const { usuario } = useAuth()
   const [filas, setFilas] = useState([])
   const [opciones, setOpciones] = useState({})
   const [catalogos, setCatalogos] = useState({})
@@ -38,6 +40,7 @@ export default function ModuloCrud({ modulo }) {
   const [filtros, setFiltros] = useState({})
   const [formulario, setFormulario] = useState(null) // null = cerrado, { fila } = abierto
   const [porEliminar, setPorEliminar] = useState(null)
+  const [citaExtra, setCitaExtra] = useState(null) // modal rapido para que el barbero adicione servicios en la silla
   const [aviso, setAviso] = useState(null)
 
   // Consulta general del modulo (GET al endPoint del controlador)
@@ -67,6 +70,8 @@ export default function ModuloCrud({ modulo }) {
             valor: String(registro[campo.recurso.valor]),
             texto: campo.recurso.texto(registro),
             activo: registro.activo,
+            precio: registro.precio,
+            duracion: registro.duracion,
           }))
         }
       }
@@ -89,10 +94,38 @@ export default function ModuloCrud({ modulo }) {
     return () => clearTimeout(temporizador)
   }, [aviso])
 
-  const visibles = useMemo(
-    () => filtrarFilas(filas, modulo, busqueda, filtros),
-    [filas, modulo, busqueda, filtros],
-  )
+  const visibles = useMemo(() => {
+    let base = filas
+    // Si es un Cliente o Barbero con identificacion vinculada, en citas ve por defecto las suyas
+    if (modulo.clave === 'citas' && usuario?.rol === 'Cliente' && usuario?.identificacion) {
+      base = base.filter((f) => String(f.idcliente) === String(usuario.identificacion))
+    } else if (modulo.clave === 'citas' && usuario?.rol === 'Barbero' && usuario?.identificacion && !filtros.idbarbero) {
+      base = base.filter((f) => String(f.idbarbero) === String(usuario.identificacion))
+    }
+    return filtrarFilas(base, modulo, busqueda, filtros)
+  }, [filas, modulo, busqueda, filtros, usuario])
+
+  async function marcarEstadoRapido(fila, nuevoEstado) {
+    try {
+      await api.cambiarEstadoCita(fila.codcita, nuevoEstado)
+      setAviso({ tipo: 'ok', texto: `Cita marcada como ${nuevoEstado}.` })
+      await cargar()
+    } catch (error) {
+      setAviso({ tipo: 'error', texto: mensajeError(error) })
+    }
+  }
+
+  async function adicionarExtraEnSilla(codservicio) {
+    if (!citaExtra || !codservicio) return
+    try {
+      const actualizada = await api.agregarServicioCita(citaExtra.codcita, codservicio)
+      setCitaExtra(actualizada)
+      setAviso({ tipo: 'ok', texto: 'Servicio adicional sumado a la cita.' })
+      await cargar()
+    } catch (error) {
+      setAviso({ tipo: 'error', texto: mensajeError(error) })
+    }
+  }
 
   function opcionesDeFiltro(filtro) {
     if (filtro.opciones) return filtro.opciones
@@ -129,6 +162,15 @@ export default function ModuloCrud({ modulo }) {
   const hayFiltros = busqueda || Object.values(filtros).some(Boolean)
   const etiquetaNuevo = modulo.clave === 'citas' ? 'Agendar cita' : `Nuevo ${modulo.singular}`
 
+  // Reglas de permisos segun el rol del usuario actual
+  const rolActual = usuario?.rol || 'Cliente'
+  const puedeCrear = !modulo.rolesCrear || modulo.rolesCrear.includes(rolActual)
+  const puedeEditar = !modulo.rolesEditar || modulo.rolesEditar.includes(rolActual)
+  const puedeEliminar = !modulo.rolesEliminar || modulo.rolesEliminar.includes(rolActual)
+  const puedeAtenderCita = modulo.clave === 'citas' && ['Administrador', 'Recepcionista', 'Barbero'].includes(rolActual)
+  const puedeCancelarPropia = modulo.clave === 'citas' && rolActual === 'Cliente'
+  const mostrarColumnaAcciones = puedeEditar || puedeEliminar || puedeAtenderCita || puedeCancelarPropia
+
   return (
     <section className="pagina">
       <header className="pagina-cabecera">
@@ -136,9 +178,11 @@ export default function ModuloCrud({ modulo }) {
           <h1>{modulo.titulo}</h1>
           <p>{modulo.descripcion}</p>
         </div>
-        <button type="button" className="boton boton-primario" onClick={() => setFormulario({ fila: null })}>
-          <Plus size={18} /> {etiquetaNuevo}
-        </button>
+        {puedeCrear && (
+          <button type="button" className="boton boton-primario" onClick={() => setFormulario({ fila: null })}>
+            <Plus size={18} /> {etiquetaNuevo}
+          </button>
+        )}
       </header>
 
       <div className="barra-filtros">
@@ -211,9 +255,11 @@ export default function ModuloCrud({ modulo }) {
                   {columna.titulo}
                 </th>
               ))}
-              <th scope="col" className="columna-acciones">
-                Acciones
-              </th>
+              {mostrarColumnaAcciones && (
+                <th scope="col" className="columna-acciones">
+                  Acciones
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -224,26 +270,76 @@ export default function ModuloCrud({ modulo }) {
                     <Celda columna={columna} fila={fila} />
                   </td>
                 ))}
-                <td className="columna-acciones">
-                  <button
-                    type="button"
-                    className="boton-icono"
-                    onClick={() => setFormulario({ fila })}
-                    aria-label={`Editar ${modulo.singular} ${fila[modulo.id]}`}
-                    title="Editar"
-                  >
-                    <Pencil size={17} />
-                  </button>
-                  <button
-                    type="button"
-                    className="boton-icono boton-icono-peligro"
-                    onClick={() => setPorEliminar(fila)}
-                    aria-label={`Eliminar ${modulo.singular} ${fila[modulo.id]}`}
-                    title="Eliminar"
-                  >
-                    <Trash2 size={17} />
-                  </button>
-                </td>
+                {mostrarColumnaAcciones && (
+                  <td className="columna-acciones">
+                    {puedeAtenderCita && (
+                      <>
+                        <button
+                          type="button"
+                          className="boton-icono boton-icono-exito"
+                          onClick={() => marcarEstadoRapido(fila, 'Atendida')}
+                          disabled={fila.estado === 'Atendida'}
+                          aria-label={`Marcar cumplida cita ${fila[modulo.id]}`}
+                          title="Marcar Cumplida (Atendida)"
+                        >
+                          <CheckCircle2 size={17} />
+                        </button>
+                        <button
+                          type="button"
+                          className="boton-icono boton-icono-alerta"
+                          onClick={() => marcarEstadoRapido(fila, 'Incumplida')}
+                          disabled={fila.estado === 'Incumplida'}
+                          aria-label={`Marcar incumplida cita ${fila[modulo.id]}`}
+                          title="Marcar Incumplida"
+                        >
+                          <XCircle size={17} />
+                        </button>
+                        <button
+                          type="button"
+                          className="boton-icono boton-icono-laton"
+                          onClick={() => setCitaExtra(fila)}
+                          aria-label={`Adicionar servicio extra a cita ${fila[modulo.id]}`}
+                          title="Adicionar servicio extra en la silla"
+                        >
+                          <PlusCircle size={17} />
+                        </button>
+                      </>
+                    )}
+                    {puedeCancelarPropia && fila.estado === 'Pendiente' && (
+                      <button
+                        type="button"
+                        className="boton-icono boton-icono-peligro"
+                        onClick={() => marcarEstadoRapido(fila, 'Cancelada')}
+                        aria-label={`Cancelar cita ${fila[modulo.id]}`}
+                        title="Cancelar mi cita"
+                      >
+                        <XCircle size={17} />
+                      </button>
+                    )}
+                    {puedeEditar && (
+                      <button
+                        type="button"
+                        className="boton-icono"
+                        onClick={() => setFormulario({ fila })}
+                        aria-label={`Editar ${modulo.singular} ${fila[modulo.id]}`}
+                        title="Editar"
+                      >
+                        <Pencil size={17} />
+                      </button>
+                    )}
+                    {puedeEliminar && (
+                      <button
+                        type="button"
+                        className="boton-icono boton-icono-peligro"
+                        onClick={() => setPorEliminar(fila)}
+                        aria-label={`Eliminar ${modulo.singular} ${fila[modulo.id]}`}
+                        title="Eliminar"
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -270,9 +366,55 @@ export default function ModuloCrud({ modulo }) {
           modulo={modulo}
           fila={formulario.fila}
           opciones={opciones}
+          usuario={usuario}
           onGuardar={guardar}
           onCerrar={() => setFormulario(null)}
         />
+      )}
+
+      {citaExtra && (
+        <div className="fondo-modal" onMouseDown={(e) => e.target === e.currentTarget && setCitaExtra(null)}>
+          <div className="modal modal-chico" role="dialog" aria-modal="true" aria-labelledby="titulo-extra">
+            <header className="modal-cabecera">
+              <h2 id="titulo-extra">Adicionar servicio en atención</h2>
+            </header>
+            <p>
+              Cliente: <strong>{citaExtra.nomcliente}</strong> · Barbero: <strong>{citaExtra.nombarbero}</strong>
+            </p>
+            <p>
+              Servicios actuales: <strong>{citaExtra.nomservicio}</strong> ({formatoMoneda(citaExtra.precio)})
+            </p>
+            <div className="catalogo-rapido">
+              {(opciones.codservicios || [])
+                .filter((op) => op.activo !== false && !(citaExtra.codservicios || []).map(String).includes(String(op.valor)))
+                .map((op) => (
+                  <button
+                    key={op.valor}
+                    type="button"
+                    className="chip-disponible"
+                    onClick={() => adicionarExtraEnSilla(op.valor)}
+                  >
+                    <Plus size={14} /> <span>{op.texto}</span>
+                  </button>
+                ))}
+            </div>
+            <footer className="modal-pie">
+              <button
+                type="button"
+                className="boton boton-primario"
+                onClick={async () => {
+                  await marcarEstadoRapido(citaExtra, 'Atendida')
+                  setCitaExtra(null)
+                }}
+              >
+                <CheckCircle2 size={16} /> Marcar Cumplida
+              </button>
+              <button type="button" className="boton boton-secundario" onClick={() => setCitaExtra(null)}>
+                Cerrar
+              </button>
+            </footer>
+          </div>
+        </div>
       )}
 
       {porEliminar && (

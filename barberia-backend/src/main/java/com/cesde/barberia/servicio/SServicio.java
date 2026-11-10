@@ -77,7 +77,7 @@ public class SServicio {
         try {
             Servicio servicio = consultarPorId(codservicio);
             // Integridad referencial: no se elimina un servicio que tenga citas
-            if (iCita.existsByServicio_Codservicio(codservicio)) {
+            if (iCita.existsByServicio_Codservicio(codservicio) || iCita.existsByServicios_Codservicio(codservicio)) {
                 throw new ReglaNegocioException(
                         "No se puede eliminar el servicio porque tiene citas registradas.");
             }

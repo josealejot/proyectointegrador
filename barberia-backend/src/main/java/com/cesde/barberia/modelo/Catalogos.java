@@ -13,10 +13,10 @@ public final class Catalogos {
             List.of("Efectivo", "Tarjeta", "Transferencia");
 
     public static final List<String> ESTADOS_CITA =
-            List.of("Pendiente", "Atendida", "Cancelada");
+            List.of("Pendiente", "Atendida", "Incumplida", "Cancelada");
 
     public static final List<String> ROLES =
-            List.of("Administrador", "Recepcionista");
+            List.of("Administrador", "Recepcionista", "Barbero", "Cliente");
 
     private Catalogos() {
     }

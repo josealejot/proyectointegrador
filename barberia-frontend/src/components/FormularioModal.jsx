@@ -5,11 +5,24 @@ import { formatoHora } from '../utils/formato.js'
 import { hoy, prepararEnvio, validarCampo, validarFormulario } from '../utils/validaciones.js'
 import Campo from './Campo.jsx'
 
-function valoresIniciales(campos, fila) {
+function valoresIniciales(campos, fila, usuario) {
   const valores = {}
   for (const campo of campos) {
     if (!fila) {
-      valores[campo.nombre] = campo.inicial ?? (campo.tipo === 'check' ? false : '')
+      if (campo.tipo === 'multirubro') {
+        valores[campo.nombre] = []
+      } else if (campo.nombre === 'idcliente' && usuario?.rol === 'Cliente' && usuario?.identificacion) {
+        valores[campo.nombre] = String(usuario.identificacion)
+      } else if (campo.nombre === 'idbarbero' && usuario?.rol === 'Barbero' && usuario?.identificacion) {
+        valores[campo.nombre] = String(usuario.identificacion)
+      } else {
+        valores[campo.nombre] = campo.inicial ?? (campo.tipo === 'check' ? false : '')
+      }
+    } else if (campo.tipo === 'multirubro') {
+      const lista = Array.isArray(fila[campo.nombre]) && fila[campo.nombre].length > 0
+        ? fila[campo.nombre]
+        : (fila.codservicio ? [fila.codservicio] : [])
+      valores[campo.nombre] = lista.map(String)
     } else if (campo.tipo === 'check') {
       valores[campo.nombre] = Boolean(fila[campo.nombre])
     } else if (campo.tipo === 'clave') {
@@ -24,12 +37,12 @@ function valoresIniciales(campos, fila) {
 }
 
 // Ventana con el formulario para crear o editar un registro de cualquier modulo
-export default function FormularioModal({ modulo, fila, opciones, onGuardar, onCerrar }) {
+export default function FormularioModal({ modulo, fila, opciones, usuario, onGuardar, onCerrar }) {
   const esNuevo = !fila
   // Al crear no se muestran los campos que solo aplican al editar
   const campos = modulo.campos.filter((campo) => !(esNuevo && campo.soloEditar))
 
-  const [valores, setValores] = useState(() => valoresIniciales(campos, fila))
+  const [valores, setValores] = useState(() => valoresIniciales(campos, fila, usuario))
   const [errores, setErrores] = useState({})
   const [errorServidor, setErrorServidor] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -109,8 +122,13 @@ export default function FormularioModal({ modulo, fila, opciones, onGuardar, onC
                 valor={valores[campo.nombre]}
                 error={errores[campo.nombre]}
                 opciones={opcionesDe(campo)}
-                // La llave primaria escrita a mano no se puede cambiar al editar
-                deshabilitado={guardando || (!esNuevo && modulo.idManual && campo.nombre === modulo.id)}
+                // La llave primaria escrita a mano no se puede cambiar al editar,
+                // y un Cliente no puede cambiar el cliente de la cita por el de otra persona
+                deshabilitado={
+                  guardando ||
+                  (!esNuevo && modulo.idManual && campo.nombre === modulo.id) ||
+                  (campo.nombre === 'idcliente' && usuario?.rol === 'Cliente' && Boolean(usuario?.identificacion))
+                }
                 minimo={campo.noAnteriorAHoy && esNuevo ? hoy() : undefined}
                 onCambio={(valor) => cambiar(campo, valor)}
               />

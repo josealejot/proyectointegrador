@@ -6,7 +6,9 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { validarFormulario } from '../utils/validaciones.js'
 
 const campos = [
-  { nombre: 'nombre', etiqueta: 'Nombre', tipo: 'texto', requerido: true, min: 3, max: 80 },
+  { nombre: 'identificacion', etiqueta: 'Identificación (Cédula)', tipo: 'digitos', requerido: true, min: 6, max: 10, ayuda: 'De 6 a 10 números' },
+  { nombre: 'nombre', etiqueta: 'Nombre completo', tipo: 'texto', requerido: true, min: 3, max: 80 },
+  { nombre: 'telefono', etiqueta: 'Teléfono celular', tipo: 'digitos', requerido: true, min: 10, max: 10, ayuda: 'Celular de 10 números' },
   { nombre: 'correo', etiqueta: 'Correo', tipo: 'correo', requerido: true, max: 100 },
   { nombre: 'contrasena', etiqueta: 'Contraseña', tipo: 'clave', requerido: true, min: 8, max: 72, ayuda: 'Mínimo 8 caracteres' },
   { nombre: 'confirmar', etiqueta: 'Confirmar contraseña', tipo: 'clave', requerido: true, max: 72 },
@@ -15,7 +17,14 @@ const campos = [
 export default function Registro() {
   const { usuario, registrar } = useAuth()
   const navegar = useNavigate()
-  const [valores, setValores] = useState({ nombre: '', correo: '', contrasena: '', confirmar: '' })
+  const [valores, setValores] = useState({
+    identificacion: '',
+    nombre: '',
+    telefono: '',
+    correo: '',
+    contrasena: '',
+    confirmar: '',
+  })
   const [errores, setErrores] = useState({})
   const [errorServidor, setErrorServidor] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -35,7 +44,10 @@ export default function Registro() {
     try {
       setEnviando(true)
       await registrar({
+        rol: 'Cliente',
+        identificacion: valores.identificacion.trim(),
         nombre: valores.nombre.trim(),
+        telefono: valores.telefono.trim(),
         correo: valores.correo.trim(),
         contrasena: valores.contrasena,
       })
@@ -56,8 +68,8 @@ export default function Registro() {
       <main className="acceso-panel">
         <form className="acceso-formulario" onSubmit={enviar} noValidate>
           <p className="marca-nombre">La Navaja</p>
-          <h1>Crear una cuenta</h1>
-          <p className="acceso-texto">La cuenta queda con rol de recepcionista.</p>
+          <h1>Crear cuenta de cliente</h1>
+          <p className="acceso-texto">Regístrate para consultar servicios, precios y agendar tus citas.</p>
 
           {errorServidor && (
             <p className="alerta alerta-error" role="alert">

@@ -21,6 +21,14 @@ export function validarCampo(campo, valor, contexto = {}) {
     return typeof valor === 'boolean' ? '' : `Indica si ${etiqueta.toLowerCase()} aplica.`
   }
 
+  if (campo.tipo === 'multirubro') {
+    const lista = Array.isArray(valor) ? valor.filter(Boolean) : []
+    if ((campo.requerido || (campo.requeridoAlCrear && esNuevo)) && lista.length === 0) {
+      return `Selecciona al menos un ${etiqueta.toLowerCase()}.`
+    }
+    return ''
+  }
+
   const texto = String(valor ?? '').trim()
   const requerido = campo.requerido || (campo.requeridoAlCrear && esNuevo)
 
@@ -110,6 +118,12 @@ export function prepararEnvio(campos, valores) {
     const valor = valores[campo.nombre]
     if (campo.tipo === 'check') {
       datos[campo.nombre] = Boolean(valor)
+    } else if (campo.tipo === 'multirubro') {
+      const lista = (Array.isArray(valor) ? valor : []).map((id) => Number(id)).filter((n) => !Number.isNaN(n) && n > 0)
+      datos[campo.nombre] = lista
+      if (campo.nombre === 'codservicios' && lista.length > 0) {
+        datos.codservicio = lista[0]
+      }
     } else if (campo.tipo === 'clave') {
       datos[campo.nombre] = valor || ''
     } else if (campo.tipo === 'numero' || campo.numerico) {

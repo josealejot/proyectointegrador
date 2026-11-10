@@ -1,0 +1,17 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-17",
+            "path": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot",
+            "default": true
+        }
+    ],
+    "maven.executable.preferMavenWrapper": true,
+    "terminal.integrated.env.windows": {
+        "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot",
+        "Path": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot\\bin;C:\\Users\\josea\\.m2\\wrapper\\dists\\apache-maven-3.9.16\\0daed3be3ebd1c706f0e69e8b07c6b73f5cc4ea3dfce72a8d0ec2e849ca2ddb0\\bin;${env:Path}"
+    }
+}
+

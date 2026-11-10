@@ -7,5 +7,12 @@ public record UsuarioRegistroDTO(
         String correo,
         String contrasena,
         String rol,
-        Boolean activo) {
+        Boolean activo,
+        String identificacion,
+        String telefono,
+        String especialidad) {
+
+    public UsuarioRegistroDTO(String nombre, String correo, String contrasena, String rol, Boolean activo) {
+        this(nombre, correo, contrasena, rol, activo, null, null, null);
+    }
 }

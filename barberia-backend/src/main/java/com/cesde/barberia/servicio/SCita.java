@@ -22,7 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class SCita {
@@ -110,6 +113,51 @@ public class SCita {
     }
 
     @Transactional
+    public CitaDTO cambiarEstado(Integer codcita, String estado) {
+        try {
+            Cita cita = buscar(codcita);
+            String estadoValido = Validador.opcion(estado, "estado", Catalogos.ESTADOS_CITA);
+            cita.setEstado(estadoValido);
+            return iCitaMapper.toDTO(iCita.save(cita));
+        } catch (DataAccessException e) {
+            throw new ReglaNegocioException("Error de base de datos al cambiar el estado de la cita.");
+        }
+    }
+
+    @Transactional
+    public CitaDTO agregarServicioExtra(Integer codcita, Integer codservicio) {
+        try {
+            if (codservicio == null) {
+                throw new ReglaNegocioException("Debe indicar el servicio a agregar.");
+            }
+            Cita cita = buscar(codcita);
+            Servicio nuevo = iServicio.findById(codservicio)
+                    .orElseThrow(() -> new ReglaNegocioException("El servicio seleccionado no existe."));
+            if (!nuevo.getActivo()) {
+                throw new ReglaNegocioException("El servicio seleccionado esta inactivo.");
+            }
+            List<Servicio> actuales = new ArrayList<>();
+            if (cita.getServicios() != null && !cita.getServicios().isEmpty()) {
+                actuales.addAll(cita.getServicios());
+            } else if (cita.getServicio() != null) {
+                actuales.add(cita.getServicio());
+            }
+            boolean yaEsta = actuales.stream().anyMatch(s -> s.getCodservicio().equals(codservicio));
+            if (yaEsta) {
+                throw new ReglaNegocioException("Ese servicio ya esta incluido en la cita.");
+            }
+            actuales.add(nuevo);
+            cita.setServicios(actuales);
+            if (cita.getServicio() == null) {
+                cita.setServicio(actuales.get(0));
+            }
+            return iCitaMapper.toDTO(iCita.save(cita));
+        } catch (DataAccessException e) {
+            throw new ReglaNegocioException("Error de base de datos al agregar el servicio a la cita.");
+        }
+    }
+
+    @Transactional
     public void eliminar(Integer codcita) {
         try {
             iCita.delete(buscar(codcita));
@@ -154,16 +202,37 @@ public class SCita {
             throw new ReglaNegocioException("La hora debe estar entre las 08:00 y las 20:00.");
         }
 
-        // Regla: el cliente, el barbero y el servicio deben existir antes de guardar la cita
+        // Regla: el cliente, el barbero y los servicios deben existir antes de guardar la cita
         Cliente cliente = iCliente.findById(textoLlave(datos.idcliente(), "cliente"))
                 .orElseThrow(() -> new ReglaNegocioException("El cliente seleccionado no existe."));
         Barbero barbero = iBarbero.findById(textoLlave(datos.idbarbero(), "barbero"))
                 .orElseThrow(() -> new ReglaNegocioException("El barbero seleccionado no existe."));
-        if (datos.codservicio() == null) {
-            throw new ReglaNegocioException("El campo servicio es obligatorio.");
+
+        Set<Integer> idsServicios = new LinkedHashSet<>();
+        if (datos.codservicios() != null && !datos.codservicios().isEmpty()) {
+            for (Integer id : datos.codservicios()) {
+                if (id != null) {
+                    idsServicios.add(id);
+                }
+            }
+        } else if (datos.codservicio() != null) {
+            idsServicios.add(datos.codservicio());
         }
-        Servicio servicio = iServicio.findById(datos.codservicio())
-                .orElseThrow(() -> new ReglaNegocioException("El servicio seleccionado no existe."));
+
+        if (idsServicios.isEmpty()) {
+            throw new ReglaNegocioException("Debe seleccionar al menos un servicio.");
+        }
+
+        List<Servicio> serviciosSeleccionados = new ArrayList<>();
+        for (Integer idServ : idsServicios) {
+            Servicio s = iServicio.findById(idServ)
+                    .orElseThrow(() -> new ReglaNegocioException("El servicio seleccionado no existe."));
+            if (esNueva && !s.getActivo()) {
+                throw new ReglaNegocioException("El servicio " + s.getNomservicio() + " esta inactivo.");
+            }
+            serviciosSeleccionados.add(s);
+        }
+        Servicio servicioPrincipal = serviciosSeleccionados.get(0);
 
         // Regla: no se agenda una cita nueva con registros inactivos
         if (esNueva) {
@@ -173,13 +242,10 @@ public class SCita {
             if (!barbero.getActivo()) {
                 throw new ReglaNegocioException("El barbero seleccionado esta inactivo.");
             }
-            if (!servicio.getActivo()) {
-                throw new ReglaNegocioException("El servicio seleccionado esta inactivo.");
-            }
         }
 
         // Regla: un barbero no puede tener dos citas a la misma fecha y hora
-        if (!estado.equals("Cancelada")
+        if (!estado.equals("Cancelada") && !estado.equals("Incumplida")
                 && iCita.contarCruces(barbero.getIdbarbero(), datos.fecha(), datos.hora(), cita.getCodcita()) > 0) {
             throw new ReglaNegocioException("El barbero ya tiene una cita en esa fecha y hora.");
         }
@@ -188,7 +254,8 @@ public class SCita {
         cita.setHora(datos.hora());
         cita.setCliente(cliente);
         cita.setBarbero(barbero);
-        cita.setServicio(servicio);
+        cita.setServicio(servicioPrincipal);
+        cita.setServicios(serviciosSeleccionados);
         cita.setMetodopago(metodopago);
         cita.setEstado(estado);
         cita.setObservacion(observacion);

@@ -7,6 +7,12 @@ export const modificar = (endpoint, id, datos) =>
   http.put(`${endpoint}/${id}`, datos).then((r) => r.data)
 export const eliminar = (endpoint, id) => http.delete(`${endpoint}/${id}`).then((r) => r.data)
 
+// Acciones rapidas de citas (marcar estado y adicionar servicio extra en la silla)
+export const cambiarEstadoCita = (codcita, estado) =>
+  http.put(`/citas/${codcita}/estado?estado=${encodeURIComponent(estado)}`).then((r) => r.data)
+export const agregarServicioCita = (codcita, codservicio) =>
+  http.post(`/citas/${codcita}/servicios/${codservicio}`).then((r) => r.data)
+
 // Acceso
 export const iniciarSesion = (correo, contrasena) =>
   http.post('/auth/login', { correo, contrasena }).then((r) => r.data)

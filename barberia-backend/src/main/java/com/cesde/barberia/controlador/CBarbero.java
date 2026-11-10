@@ -32,7 +32,7 @@ public class CBarbero {
     }
 
     @GetMapping
-    @Operation(summary = "Consulta general de barberos")
+    @Operation(summary = "Metodo para consultar todos los barberos", description = "Este servicio devuelve la lista de todos los barberos de la barberia")
     public ResponseEntity<?> consultarTodos() {
         try {
             return ResponseEntity.ok(sBarbero.consultarTodos());
@@ -44,7 +44,7 @@ public class CBarbero {
     }
 
     @GetMapping("/{idbarbero}")
-    @Operation(summary = "Consulta un barbero por llave primaria")
+    @Operation(summary = "Metodo para consultar un barbero por llave primaria", description = "Este servicio consulta un barbero por su identificacion (idbarbero)")
     public ResponseEntity<?> consultarPorId(@PathVariable String idbarbero) {
         try {
             return ResponseEntity.ok(sBarbero.consultarPorId(idbarbero));
@@ -58,7 +58,7 @@ public class CBarbero {
     }
 
     @GetMapping("/buscar")
-    @Operation(summary = "Busca barberos por parte del nombre")
+    @Operation(summary = "Metodo para buscar barberos por nombre", description = "Este servicio filtra los barberos cuyo nombre contenga el texto buscado")
     public ResponseEntity<?> consultarPorNombre(@RequestParam(defaultValue = "") String nombre) {
         try {
             return ResponseEntity.ok(sBarbero.consultarPorNombre(nombre));
@@ -70,7 +70,7 @@ public class CBarbero {
     }
 
     @PostMapping
-    @Operation(summary = "Adiciona un barbero")
+    @Operation(summary = "Metodo para adicionar barberos", description = "Este servicio valida y registra un nuevo barbero en el sistema")
     public ResponseEntity<?> adicionar(@RequestBody Barbero barbero) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(sBarbero.adicionar(barbero));
@@ -82,7 +82,7 @@ public class CBarbero {
     }
 
     @PutMapping("/{idbarbero}")
-    @Operation(summary = "Modifica un barbero")
+    @Operation(summary = "Metodo para modificar un barbero", description = "Este servicio actualiza la informacion de un barbero existente")
     public ResponseEntity<?> modificar(@PathVariable String idbarbero, @RequestBody Barbero barbero) {
         try {
             return ResponseEntity.ok(sBarbero.modificar(idbarbero, barbero));
@@ -96,7 +96,7 @@ public class CBarbero {
     }
 
     @DeleteMapping("/{idbarbero}")
-    @Operation(summary = "Elimina un barbero", description = "No permite eliminar barberos con citas")
+    @Operation(summary = "Metodo para eliminar un barbero", description = "Este servicio elimina un barbero si no tiene citas asociadas")
     public ResponseEntity<?> eliminar(@PathVariable String idbarbero) {
         try {
             sBarbero.eliminar(idbarbero);

@@ -113,6 +113,34 @@ public class CCita {
         }
     }
 
+    @PutMapping("/{codcita}/estado")
+    @Operation(summary = "Marca el estado de una cita (Pendiente, Atendida, Incumplida, Cancelada)")
+    public ResponseEntity<?> cambiarEstado(@PathVariable Integer codcita, @RequestParam String estado) {
+        try {
+            return ResponseEntity.ok(sCita.cambiarEstado(codcita, estado));
+        } catch (NoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ReglaNegocioException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno al cambiar el estado.");
+        }
+    }
+
+    @PostMapping("/{codcita}/servicios/{codservicio}")
+    @Operation(summary = "Adiciona un servicio extra a una cita durante la atencion")
+    public ResponseEntity<?> agregarServicioExtra(@PathVariable Integer codcita, @PathVariable Integer codservicio) {
+        try {
+            return ResponseEntity.ok(sCita.agregarServicioExtra(codcita, codservicio));
+        } catch (NoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ReglaNegocioException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno al agregar el servicio.");
+        }
+    }
+
     @DeleteMapping("/{codcita}")
     @Operation(summary = "Elimina una cita")
     public ResponseEntity<?> eliminar(@PathVariable Integer codcita) {

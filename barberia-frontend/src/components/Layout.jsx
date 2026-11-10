@@ -14,7 +14,10 @@ const iconos = {
 // Estructura comun de las paginas con sesion: menu lateral y contenido
 export default function Layout() {
   const { usuario, cerrarSesion } = useAuth()
-  const visibles = modulos.filter((modulo) => !modulo.soloAdmin || usuario.rol === 'Administrador')
+  const visibles = modulos.filter((modulo) => {
+    if (modulo.rolesVer) return modulo.rolesVer.includes(usuario.rol)
+    return !modulo.soloAdmin || usuario.rol === 'Administrador'
+  })
 
   return (
     <div className="aplicacion">

@@ -32,7 +32,7 @@ public class CCliente {
     }
 
     @GetMapping
-    @Operation(summary = "Consulta general de clientes")
+    @Operation(summary = "Metodo para consultar todos los clientes", description = "Este servicio devuelve la lista completa de clientes registrados en la barberia")
     public ResponseEntity<?> consultarTodos() {
         try {
             return ResponseEntity.ok(sCliente.consultarTodos());
@@ -44,7 +44,7 @@ public class CCliente {
     }
 
     @GetMapping("/{idcliente}")
-    @Operation(summary = "Consulta un cliente por llave primaria")
+    @Operation(summary = "Metodo para consultar un cliente por llave primaria", description = "Este servicio consulta un cliente por su identificacion (idcliente)")
     public ResponseEntity<?> consultarPorId(@PathVariable String idcliente) {
         try {
             return ResponseEntity.ok(sCliente.consultarPorId(idcliente));
@@ -58,7 +58,7 @@ public class CCliente {
     }
 
     @GetMapping("/buscar")
-    @Operation(summary = "Busca clientes por parte del nombre")
+    @Operation(summary = "Metodo para buscar clientes por nombre", description = "Este servicio filtra los clientes cuyo nombre contenga el texto buscado")
     public ResponseEntity<?> consultarPorNombre(@RequestParam(defaultValue = "") String nombre) {
         try {
             return ResponseEntity.ok(sCliente.consultarPorNombre(nombre));
@@ -70,7 +70,7 @@ public class CCliente {
     }
 
     @PostMapping
-    @Operation(summary = "Adiciona un cliente", description = "Valida los datos y guarda el cliente")
+    @Operation(summary = "Metodo para adicionar clientes de la barberia", description = "Este servicio valida los datos y agrega la informacion de un nuevo cliente")
     public ResponseEntity<?> adicionar(@RequestBody Cliente cliente) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(sCliente.adicionar(cliente));
@@ -82,7 +82,7 @@ public class CCliente {
     }
 
     @PutMapping("/{idcliente}")
-    @Operation(summary = "Modifica un cliente")
+    @Operation(summary = "Metodo para modificar la informacion de un cliente", description = "Este servicio actualiza los datos de un cliente existente por su llave primaria")
     public ResponseEntity<?> modificar(@PathVariable String idcliente, @RequestBody Cliente cliente) {
         try {
             return ResponseEntity.ok(sCliente.modificar(idcliente, cliente));
@@ -96,7 +96,7 @@ public class CCliente {
     }
 
     @DeleteMapping("/{idcliente}")
-    @Operation(summary = "Elimina un cliente", description = "No permite eliminar clientes con citas")
+    @Operation(summary = "Metodo para eliminar un cliente", description = "Este servicio elimina un cliente por su llave primaria si no tiene citas registradas")
     public ResponseEntity<?> eliminar(@PathVariable String idcliente) {
         try {
             sCliente.eliminar(idcliente);

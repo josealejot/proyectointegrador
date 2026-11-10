@@ -367,7 +367,107 @@ tbody tr:hover { background: #faf5ec; }
 .etiqueta-atendida { background: var(--verde-suave); color: #1f4a2f; }
 .etiqueta-apagada { background: var(--gris-suave); color: var(--tinta-suave); }
 .etiqueta-pendiente { background: var(--laton-suave); color: #5f400b; }
-.etiqueta-cancelada { background: var(--rojo-suave); color: #7c2318; }
+.etiqueta-cancelada,
+.etiqueta-incumplida { background: var(--rojo-suave); color: #7c2318; }
+
+.boton-icono-exito:hover:not(:disabled) { background: var(--verde-suave); color: var(--verde); }
+.boton-icono-alerta:hover:not(:disabled) { background: var(--rojo-suave); color: var(--rojo); }
+.boton-icono-laton:hover:not(:disabled) { background: var(--laton-suave); color: var(--laton-fuerte); }
+.boton-icono:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ---------- Selector multiple de servicios ---------- */
+
+.selector-multiple {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.catalogo-rapido {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-disponible {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--superficie);
+  border: 1px dashed #b9ad9b;
+  color: var(--tinta);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.chip-disponible:hover:not(:disabled) {
+  border-style: solid;
+  border-color: var(--laton-fuerte);
+  background: var(--laton-suave);
+}
+
+.servicios-elegidos {
+  background: #faf5ec;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lista-chips-elegidos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-elegido {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--laton-suave);
+  color: var(--madera);
+  border: 1px solid #d5bd8a;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.chip-quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--madera);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+}
+
+.chip-quitar:hover {
+  background: rgba(33, 27, 23, 0.12);
+}
+
+.resumen-servicios-cita {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: var(--tinta-suave);
+  border-top: 1px solid var(--linea);
+  padding-top: 6px;
+}
 
 /* ---------- Formularios ---------- */
 

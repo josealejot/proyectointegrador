@@ -34,12 +34,13 @@ CREATE TABLE IF NOT EXISTS servicio (
 );
 
 CREATE TABLE IF NOT EXISTS usuario (
-    idusuario  INT          NOT NULL AUTO_INCREMENT,
-    nombre     VARCHAR(80)  NOT NULL,
-    correo     VARCHAR(100) NOT NULL,
-    contrasena VARCHAR(100) NOT NULL,
-    rol        VARCHAR(20)  NOT NULL,
-    activo     BIT(1)       NOT NULL,
+    idusuario      INT          NOT NULL AUTO_INCREMENT,
+    nombre         VARCHAR(80)  NOT NULL,
+    correo         VARCHAR(100) NOT NULL,
+    contrasena     VARCHAR(100) NOT NULL,
+    rol            VARCHAR(20)  NOT NULL,
+    activo         BIT(1)       NOT NULL,
+    identificacion VARCHAR(10)  NULL,
     PRIMARY KEY (idusuario),
     UNIQUE KEY uk_usuario_correo (correo)
 );
@@ -58,4 +59,11 @@ CREATE TABLE IF NOT EXISTS cita (
     CONSTRAINT fk_cita_cliente  FOREIGN KEY (idcliente)   REFERENCES cliente (idcliente),
     CONSTRAINT fk_cita_barbero  FOREIGN KEY (idbarbero)   REFERENCES barbero (idbarbero),
     CONSTRAINT fk_cita_servicio FOREIGN KEY (codservicio) REFERENCES servicio (codservicio)
+);
+
+CREATE TABLE IF NOT EXISTS cita_servicio (
+    codcita     INT NOT NULL,
+    codservicio INT NOT NULL,
+    CONSTRAINT fk_cs_cita     FOREIGN KEY (codcita)     REFERENCES cita (codcita) ON DELETE CASCADE,
+    CONSTRAINT fk_cs_servicio FOREIGN KEY (codservicio) REFERENCES servicio (codservicio)
 );

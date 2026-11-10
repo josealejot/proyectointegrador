@@ -18,28 +18,14 @@ export default function App() {
       <Route element={<RutaProtegida />}>
         <Route element={<Layout />}>
           <Route path="/" element={<Inicio />} />
-          {modulos
-            .filter((modulo) => !modulo.soloAdmin)
-            .map((modulo) => (
+          {modulos.map((modulo) => (
+            <Route key={modulo.clave} element={<RutaProtegida roles={modulo.rolesVer} />}>
               <Route
-                key={modulo.clave}
                 path={modulo.ruta}
                 element={<ModuloCrud key={modulo.clave} modulo={modulo} />}
               />
-            ))}
-
-          {/* Rutas restringidas por rol: solo el administrador */}
-          <Route element={<RutaProtegida rol="Administrador" />}>
-            {modulos
-              .filter((modulo) => modulo.soloAdmin)
-              .map((modulo) => (
-                <Route
-                  key={modulo.clave}
-                  path={modulo.ruta}
-                  element={<ModuloCrud key={modulo.clave} modulo={modulo} />}
-                />
-              ))}
-          </Route>
+            </Route>
+          ))}
         </Route>
       </Route>
 

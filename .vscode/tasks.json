@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Iniciar Backend (Spring Boot)",
+            "type": "shell",
+            "command": ".\\mvnw.cmd spring-boot:run",
+            "options": {
+                "cwd": "${workspaceFolder}/barberia-backend"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "Iniciar Frontend (Vite)",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": {
+                "cwd": "${workspaceFolder}/barberia-frontend"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "Iniciar Proyecto Completo (Backend + Frontend)",
+            "dependsOn": [
+                "Iniciar Backend (Spring Boot)",
+                "Iniciar Frontend (Vite)"
+            ],
+            "dependsOrder": "parallel",
+            "problemMatcher": []
+        }
+    ]
+}
+

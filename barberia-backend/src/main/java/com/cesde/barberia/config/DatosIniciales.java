@@ -56,6 +56,12 @@ public class DatosIniciales implements CommandLineRunner {
                 iCliente.save(cliente("1017123456", "Santiago Gomez", "3015551234", "santiago@correo.com"));
                 iCliente.save(cliente("1152987654", "Mateo Alvarez", "3145559876", "mateo@correo.com"));
             }
+            // Cuentas de acceso para barberos y clientes de ejemplo (si aun no existen)
+            crearCuentaSiNoExiste("Andres Zapata", "andres@barberia.com", "Barberia2026*", "Barbero", "71345678", "3004567890", "Degradado");
+            crearCuentaSiNoExiste("Julian Restrepo", "julian@barberia.com", "Barberia2026*", "Barbero", "1037654321", "3112345678", "Barba");
+            crearCuentaSiNoExiste("Camila Ospina", "camila@barberia.com", "Barberia2026*", "Barbero", "43987654", "3209876543", "Colorimetria");
+            crearCuentaSiNoExiste("Santiago Gomez", "santiago@correo.com", "Barberia2026*", "Cliente", "1017123456", "3015551234", null);
+            crearCuentaSiNoExiste("Mateo Alvarez", "mateo@correo.com", "Barberia2026*", "Cliente", "1152987654", "3145559876", null);
         } catch (Exception e) {
             System.out.println("No fue posible cargar los datos iniciales: " + e.getMessage());
         }
@@ -88,5 +94,13 @@ public class DatosIniciales implements CommandLineRunner {
         cliente.setCorreo(correo);
         cliente.setActivo(true);
         return cliente;
+    }
+
+    private void crearCuentaSiNoExiste(String nombre, String correo, String clave, String rol,
+                                       String identificacion, String telefono, String especialidad) {
+        if (iUsuario.findByCorreoIgnoreCase(correo).isEmpty()) {
+            sUsuario.adicionar(new UsuarioRegistroDTO(
+                    nombre, correo, clave, rol, true, identificacion, telefono, especialidad));
+        }
     }
 }

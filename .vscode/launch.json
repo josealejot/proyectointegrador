@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot - BarberiaApplication (Backend)",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/barberia-backend",
+            "mainClass": "com.cesde.barberia.BarberiaApplication",
+            "projectName": "barberia"
+        }
+    ]
+}

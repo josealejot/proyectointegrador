@@ -6,5 +6,6 @@ public record UsuarioDTO(
         String nombre,
         String correo,
         String rol,
-        Boolean activo) {
+        Boolean activo,
+        String identificacion) {
 }

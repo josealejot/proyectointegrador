@@ -31,7 +31,7 @@ public class CUsuario {
     }
 
     @GetMapping
-    @Operation(summary = "Consulta general de usuarios", description = "Nunca devuelve la contrasena")
+    @Operation(summary = "Metodo para consultar todos los usuarios", description = "Este servicio devuelve todos los usuarios sin exponer la contrasena")
     public ResponseEntity<?> consultarTodos() {
         try {
             return ResponseEntity.ok(sUsuario.consultarTodos());
@@ -43,7 +43,7 @@ public class CUsuario {
     }
 
     @GetMapping("/{idusuario}")
-    @Operation(summary = "Consulta un usuario por llave primaria")
+    @Operation(summary = "Metodo para consultar un usuario por llave primaria", description = "Este servicio consulta un usuario por su identificador (idusuario)")
     public ResponseEntity<?> consultarPorId(@PathVariable Integer idusuario) {
         try {
             return ResponseEntity.ok(sUsuario.consultarPorId(idusuario));
@@ -57,7 +57,7 @@ public class CUsuario {
     }
 
     @PostMapping
-    @Operation(summary = "Adiciona un usuario eligiendo rol y estado")
+    @Operation(summary = "Metodo para adicionar un usuario", description = "Este servicio registra un nuevo usuario cifrando su contrasena con BCrypt")
     public ResponseEntity<?> adicionar(@RequestBody UsuarioRegistroDTO usuario) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(sUsuario.adicionar(usuario));
@@ -69,7 +69,7 @@ public class CUsuario {
     }
 
     @PutMapping("/{idusuario}")
-    @Operation(summary = "Modifica un usuario", description = "La contrasena solo cambia si se envia una nueva")
+    @Operation(summary = "Metodo para modificar un usuario", description = "Este servicio actualiza los datos de un usuario; la contrasena solo cambia si se envia una nueva")
     public ResponseEntity<?> modificar(@PathVariable Integer idusuario, @RequestBody UsuarioRegistroDTO usuario) {
         try {
             return ResponseEntity.ok(sUsuario.modificar(idusuario, usuario));
@@ -83,7 +83,7 @@ public class CUsuario {
     }
 
     @DeleteMapping("/{idusuario}")
-    @Operation(summary = "Elimina un usuario")
+    @Operation(summary = "Metodo para eliminar un usuario", description = "Este servicio elimina un usuario asegurando que siempre quede al menos un administrador activo")
     public ResponseEntity<?> eliminar(@PathVariable Integer idusuario) {
         try {
             sUsuario.eliminar(idusuario);
